@@ -1,4 +1,4 @@
-package com.yandex.todolist
+package com.yandex.todolist.data
 
 public inline fun <T> MutableList(size: Int, init: (index: Int) -> T): MutableList<T> {
     val list = ArrayList<T>(size)

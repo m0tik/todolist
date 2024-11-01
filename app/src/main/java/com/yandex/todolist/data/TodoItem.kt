@@ -1,4 +1,4 @@
-package com.yandex.todolist
+package com.yandex.todolist.data
 
 import java.util.Date
 

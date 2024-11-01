@@ -1,6 +1,5 @@
-package com.yandex.todolist
+package com.yandex.todolist.data
 
-import java.time.LocalDateTime
 import java.util.Date
 
 interface TodoItemsRepository {
@@ -12,7 +11,7 @@ interface TodoItemsRepository {
     fun deleteTask(id: String)
 }
 
-class TodoItemsRepositoryImpl: TodoItemsRepository{
+class TodoItemsRepositoryImpl: TodoItemsRepository {
     private val list = MutableList<TodoItem>(20){ index ->
         TodoItem(
             id = index.toString(),
