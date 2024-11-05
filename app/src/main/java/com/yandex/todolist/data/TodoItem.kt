@@ -6,14 +6,14 @@ data class TodoItem(
     val id: String,
     val text: String,
     val importance: Importance,
-    val isCompleted: Boolean,
+    var isCompleted: Boolean,
     val createdAt: Date,
     val deadline: Date?=null,
     val modifiedAt: Date?=null
 )
 
-enum class Importance{
-    LOW,
-    NORMAL,
-    HIGH
+enum class Importance(val text: String){
+    NORMAL("Нет"),
+    LOW("Низкий"),
+    HIGH( "!! Высокий")
 }
