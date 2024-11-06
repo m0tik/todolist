@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.yandex.todolist.R
+import com.yandex.todolist.Screen
 import com.yandex.todolist.data.Importance
 import com.yandex.todolist.data.TodoItem
 import com.yandex.todolist.data.TodoItemsRepository
@@ -58,11 +59,20 @@ import java.util.Date
 
 @Composable
 fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
-    val descriptionState = remember { mutableStateOf(TextFieldValue()) }
-    var selectedPriority by remember { mutableStateOf(Importance.NORMAL) }
+    val id: String? = navController.previousBackStackEntry
+        ?.savedStateHandle
+        ?.get<String>(Screen.AddTasksScreen.route)
+    val task = remember {
+        mutableStateOf<TodoItem?>(null)
+    }
+    if (id != null) {
+        task.value = rep.getTask(id)
+    }
+    val descriptionState = remember { mutableStateOf(TextFieldValue(task.value?.text.orEmpty())) }
+    var selectedPriority by remember { mutableStateOf(task.value?.importance ?: Importance.NORMAL) }
     var expanded by remember { mutableStateOf(false) }
     var showDateChooserDialog by remember { mutableStateOf(false) }
-    var dateTime by remember { mutableStateOf<Date?>(null) }
+    var dateTime by remember { mutableStateOf<Date?>(task.value?.deadline) }
 
     if (showDateChooserDialog) {
         DatePickerModal(onDateSelected = {
@@ -178,7 +188,7 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = if (selectedPriority == Importance.entries[2]) colorResource(R.color.color_red) else colorResource(
                             R.color.label_tertiary
-                        ) // Apply red color if third priority is selected
+                        )
                     ),
                     fontSize = 14.sp
                 )
@@ -222,7 +232,7 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                                     lineHeight = 16.sp
                                 )
                             },
-                            contentPadding = PaddingValues(16.dp,0.dp,16.dp,0.dp),
+                            contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 0.dp),
                             onClick = {
                                 selectedPriority = priority
                                 expanded = false
@@ -232,11 +242,11 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 }
             }
             Divider(
-                color = colorResource(R.color.support_separator), // Set color to transparent to achieve opacity
+                color = colorResource(R.color.support_separator),
                 modifier = Modifier
-                    .height(0.5.dp) // Height of the divider
-                    .fillMaxWidth() // Fixed width of the divider
-                    .padding(horizontal = 16.dp) // No additional padding for the divider itself
+                    .height(0.5.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             )
             Row(
                 modifier = Modifier
@@ -263,7 +273,8 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                     }
                 }
                 Switch(
-                    checked = (dateTime != null), onCheckedChange = {
+                    checked = (dateTime != null),
+                    onCheckedChange = {
                         if (dateTime == null) {
                             showDateChooserDialog = true
                         } else dateTime = null
@@ -303,10 +314,18 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 .background(
                     shape = RoundedCornerShape(12.dp),
                     color = colorResource(R.color.back_secondary)
-                ),
+                )
+                .clickable(id !=  "") {
+                    rep.deleteTask(id.orEmpty())
+                    navController.popBackStack()
+                },
             contentAlignment = Alignment.Center
         ) {
-            Text("Удалить", fontSize = 16.sp, color = colorResource(R.color.label_disable))
+            Text(
+                "Удалить",
+                fontSize = 16.sp,
+                color = if (task.value == null) colorResource(R.color.label_disable) else colorResource(R.color.color_red)
+            )
         }
     }
 }

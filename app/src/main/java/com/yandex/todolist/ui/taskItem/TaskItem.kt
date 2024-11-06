@@ -1,6 +1,5 @@
 package com.yandex.todolist.ui.taskItem
 
-import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -9,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,34 +24,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.yandex.todolist.R
-import com.yandex.todolist.Screen
 import com.yandex.todolist.data.Importance
-import com.yandex.todolist.data.TodoItemsRepositoryImpl
 
 @Composable
 fun TaskItem(
-    navController: NavController,
     id: String,
     isChecked: Boolean,
     taskName: String,
     priority: Importance,
     deleteTask: (String) -> Unit,
+    makeDone: (String,Boolean) -> Unit,
+    navigateToEdit: (String) -> Unit,
 ) {
-    var checkedState by remember { mutableStateOf(isChecked) }
     val unCheckedBoxColor = when (priority) {
         Importance.LOW -> colorResource(R.color.support_separator)
         Importance.NORMAL -> colorResource(R.color.support_separator)
@@ -86,7 +76,7 @@ fun TaskItem(
                             deleteTask(id)
                         }
                         else if (offsetX>=thresholdCheck){
-                            checkedState = true
+                            makeDone.invoke(id,true)
                         }
                         offsetX = 0f
                     }
@@ -114,9 +104,9 @@ fun TaskItem(
                     .padding(16.dp, 0.dp, 16.dp, 0.dp)
             ) {
                 Checkbox(
-                    checked = checkedState,
+                    checked = isChecked,
                     onCheckedChange = {
-                        checkedState = !checkedState
+                        makeDone.invoke(id,it)
                     },
                     colors = CheckboxColors(
                         checkedCheckmarkColor = colorResource(R.color.back_secondary),
@@ -139,7 +129,7 @@ fun TaskItem(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    if (priority == Importance.LOW && !checkedState) {
+                    if (priority == Importance.LOW && !isChecked) {
                         Image(
                             painter = painterResource(R.drawable.priority_low),
                             contentDescription = null,
@@ -147,7 +137,7 @@ fun TaskItem(
                             colorFilter = ColorFilter.tint(colorResource(R.color.color_gray))
                         )
                     }
-                    if (priority == Importance.HIGH && !checkedState) {
+                    if (priority == Importance.HIGH && !isChecked) {
                         Image(
                             painter = painterResource(R.drawable.priority_high),
                             contentDescription = null,
@@ -159,9 +149,9 @@ fun TaskItem(
                         text = taskName,
                         fontSize = 16.sp,
                         modifier = Modifier.weight(1f),
-                        color = if (checkedState) colorResource(R.color.label_tertiary)
+                        color = if (isChecked) colorResource(R.color.label_tertiary)
                         else colorResource(R.color.label_primary),
-                        textDecoration = if (checkedState) TextDecoration.LineThrough else TextDecoration.None
+                        textDecoration = if (isChecked) TextDecoration.LineThrough else TextDecoration.None
                     )
                 }
                 Image(
@@ -171,7 +161,7 @@ fun TaskItem(
                         .size(24.dp)
                         .clickable(
                             onClick = {
-                                navController.navigate(Screen.AddTasksScreen.route)
+                                navigateToEdit.invoke(id)
                             }
                         ),
                     colorFilter = ColorFilter.tint(colorResource(R.color.label_tertiary))
