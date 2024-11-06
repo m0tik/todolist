@@ -4,8 +4,8 @@ import java.util.Date
 import kotlin.random.Random
 
 fun Priority(): Importance {
-    val fruits = Importance.entries
-    return fruits[Random.nextInt(fruits.size)]
+    val importance = Importance.entries
+    return importance[Random.nextInt(importance.size)]
 }
 
 interface TodoItemsRepository {
@@ -18,16 +18,15 @@ interface TodoItemsRepository {
 }
 
 class TodoItemsRepositoryImpl: TodoItemsRepository {
-    private val list = MutableList<TodoItem>(6){ index ->
+    private val list = MutableList<TodoItem>(25){ index ->
         TodoItem(
-            id = index.toString(),
+            id = getUniqueId(),
             text = "Купить что-то",
             importance = Priority(),
             isCompleted = false,
             createdAt = Date()
         )
     }
-
     override fun getTasks(): List<TodoItem> {
         return list
     }

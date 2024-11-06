@@ -1,5 +1,7 @@
 package com.yandex.todolist.ui.taskList
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -45,6 +48,15 @@ import com.yandex.todolist.ui.taskItem.TaskItem
 @Composable
 fun MyTasksListScreen(navController: NavController, rep: TodoItemsRepository) {
     var isVisible by remember { mutableStateOf(true) }
+    var tasks by remember { mutableStateOf(rep.getTasks()) }
+    val filteredTasks = if (isVisible) {
+        tasks
+    } else {
+        tasks.filter { !it.isCompleted }
+    }
+    val deleteTask: (String) -> Unit = { id ->
+        tasks = tasks.filter { it.id != id }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,34 +112,37 @@ fun MyTasksListScreen(navController: NavController, rep: TodoItemsRepository) {
                 .clip(RoundedCornerShape(8.dp))
                 .background(color = colorResource(R.color.back_secondary))
         ) {
-            items(rep.getTasks()) { item ->
+            items(filteredTasks) { item ->
                 TaskItem(
+                    navController,
+                    id = item.id,
                     isChecked = item.isCompleted,
                     taskName = item.text,
-                    priority = item.importance
+                    priority = item.importance,
+                    deleteTask = deleteTask
                 )
             }
         }
-        Box(
-            modifier = Modifier.fillMaxSize().padding(bottom = 40.dp,end= 16.dp)
+    }
+    Box(
+        modifier = Modifier.fillMaxSize().padding(bottom = 40.dp,end= 16.dp)
+    ) {
+        FloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(56.dp)
+                .shadow(6.dp, shape = FloatingActionButtonDefaults.largeShape),
+            shape = FloatingActionButtonDefaults.largeShape,
+            containerColor = colorResource(R.color.color_blue),
+            onClick = {
+                navController.navigate(Screen.AddTasksScreen.route)
+            },
         ) {
-            FloatingActionButton(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(56.dp)
-                    .shadow(6.dp, shape = FloatingActionButtonDefaults.largeShape),
-                shape = FloatingActionButtonDefaults.largeShape,
-                containerColor = colorResource(R.color.color_blue),
-                onClick = {
-                    navController.navigate(Screen.AddTasksScreen.route)
-                },
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add),
-                    contentDescription = "Floating action button.",
-                    tint = colorResource(R.color.color_white)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.add),
+                contentDescription = "Floating action button.",
+                tint = colorResource(R.color.color_white)
+            )
         }
     }
 }

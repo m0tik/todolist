@@ -107,7 +107,7 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 fontSize = 14.sp,
                 modifier = Modifier
                     .clickable {
-                        if (dateTime != null && descriptionState.value.text.isNotBlank()) {
+                        if (descriptionState.value.text.isNotBlank()) {
                             rep.addTask(
                                 TodoItem(
                                     id = getUniqueId(),
