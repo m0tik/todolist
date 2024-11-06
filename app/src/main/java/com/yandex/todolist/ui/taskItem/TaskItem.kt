@@ -9,11 +9,13 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.Text
@@ -61,7 +63,7 @@ fun TaskItem(
         }
     )
     val rowHeight by animateDpAsState(
-        targetValue = if (offsetX != 0f) 72.dp else 48.dp
+        targetValue = if (offsetX != 0f) 72.dp else 58.dp
     )
     Box(
         modifier = Modifier
@@ -92,7 +94,7 @@ fun TaskItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(rowHeight)
+                .fillMaxHeight()
                 .offset { IntOffset(offsetX.toInt(), 0) }
                 .background(colorResource(R.color.back_secondary))
         )
@@ -101,6 +103,7 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
+                    .wrapContentHeight()
                     .padding(16.dp, 0.dp, 16.dp, 0.dp)
             ) {
                 Checkbox(
@@ -125,26 +128,26 @@ fun TaskItem(
                         disabledIndeterminateBorderColor = unCheckedBoxColor
                     )
                 )
+                if (priority == Importance.LOW && !isChecked) {
+                    Image(
+                        painter = painterResource(R.drawable.priority_low),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(colorResource(R.color.color_gray))
+                    )
+                }
+                if (priority == Importance.HIGH && !isChecked) {
+                    Image(
+                        painter = painterResource(R.drawable.priority_high),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(colorResource(R.color.color_red))
+                    )
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).wrapContentHeight()
                 ) {
-                    if (priority == Importance.LOW && !isChecked) {
-                        Image(
-                            painter = painterResource(R.drawable.priority_low),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            colorFilter = ColorFilter.tint(colorResource(R.color.color_gray))
-                        )
-                    }
-                    if (priority == Importance.HIGH && !isChecked) {
-                        Image(
-                            painter = painterResource(R.drawable.priority_high),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            colorFilter = ColorFilter.tint(colorResource(R.color.color_red))
-                        )
-                    }
                     Text(
                         text = taskName,
                         fontSize = 16.sp,
