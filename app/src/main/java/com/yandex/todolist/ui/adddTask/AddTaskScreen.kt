@@ -1,5 +1,6 @@
 package com.yandex.todolist.ui.addTask
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +47,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.yandex.todolist.R
@@ -55,6 +59,7 @@ import com.yandex.todolist.data.TodoItemsRepository
 import com.yandex.todolist.data.TodoItemsRepositoryImpl
 import com.yandex.todolist.data.formatDate
 import com.yandex.todolist.data.getUniqueId
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
@@ -188,7 +193,7 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = if (selectedPriority == Importance.entries[2]) colorResource(R.color.color_red) else colorResource(
                             R.color.label_tertiary
-                        )
+                        ) // Apply red color if third priority is selected
                     ),
                     fontSize = 14.sp
                 )
@@ -242,11 +247,11 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 }
             }
             Divider(
-                color = colorResource(R.color.support_separator),
+                color = colorResource(R.color.support_separator), // Set color to transparent to achieve opacity
                 modifier = Modifier
-                    .height(0.5.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .height(0.5.dp) // Height of the divider
+                    .fillMaxWidth() // Fixed width of the divider
+                    .padding(horizontal = 16.dp) // No additional padding for the divider itself
             )
             Row(
                 modifier = Modifier

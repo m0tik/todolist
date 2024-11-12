@@ -1,5 +1,6 @@
 package com.yandex.todolist.ui.taskItem
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Image
@@ -8,16 +9,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxColors
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,16 +27,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.yandex.todolist.R
+import com.yandex.todolist.Screen
 import com.yandex.todolist.data.Importance
+import com.yandex.todolist.data.TodoItemsRepositoryImpl
 
 @Composable
 fun TaskItem(
@@ -63,7 +71,7 @@ fun TaskItem(
         }
     )
     val rowHeight by animateDpAsState(
-        targetValue = if (offsetX != 0f) 72.dp else 58.dp
+        targetValue = if (offsetX != 0f) 72.dp else 48.dp
     )
     Box(
         modifier = Modifier
@@ -94,7 +102,7 @@ fun TaskItem(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
+                .height(rowHeight)
                 .offset { IntOffset(offsetX.toInt(), 0) }
                 .background(colorResource(R.color.back_secondary))
         )
@@ -103,7 +111,6 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .wrapContentHeight()
                     .padding(16.dp, 0.dp, 16.dp, 0.dp)
             ) {
                 Checkbox(
@@ -128,26 +135,26 @@ fun TaskItem(
                         disabledIndeterminateBorderColor = unCheckedBoxColor
                     )
                 )
-                if (priority == Importance.LOW && !isChecked) {
-                    Image(
-                        painter = painterResource(R.drawable.priority_low),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        colorFilter = ColorFilter.tint(colorResource(R.color.color_gray))
-                    )
-                }
-                if (priority == Importance.HIGH && !isChecked) {
-                    Image(
-                        painter = painterResource(R.drawable.priority_high),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        colorFilter = ColorFilter.tint(colorResource(R.color.color_red))
-                    )
-                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    modifier = Modifier.weight(1f).wrapContentHeight()
+                    modifier = Modifier.weight(1f)
                 ) {
+                    if (priority == Importance.LOW && !isChecked) {
+                        Image(
+                            painter = painterResource(R.drawable.priority_low),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            colorFilter = ColorFilter.tint(colorResource(R.color.color_gray))
+                        )
+                    }
+                    if (priority == Importance.HIGH && !isChecked) {
+                        Image(
+                            painter = painterResource(R.drawable.priority_high),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                            colorFilter = ColorFilter.tint(colorResource(R.color.color_red))
+                        )
+                    }
                     Text(
                         text = taskName,
                         fontSize = 16.sp,
