@@ -1,7 +1,9 @@
 package com.yandex.todolist.data
 
-import android.util.Log
-import java.util.Date
+import com.yandex.todolist.retrofit.TodoApiService
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import kotlin.random.Random
 
 fun Priority(): Importance {
@@ -9,51 +11,30 @@ fun Priority(): Importance {
     return importance[Random.nextInt(importance.size)]
 }
 
-interface TodoItemsRepository {
+class TodoItemsRepository {
+    private val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl("https://beta.mrdekk.ru/todo/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    fun getTasks(filtered: Boolean): List<TodoItem>
-
-    fun getTask(id: String): TodoItem?
-
-    fun addTask(task: TodoItem)
-
-    fun changeState(id: String, isComplete: Boolean)
-
-    fun deleteTask(id: String)
-}
-
-class TodoItemsRepositoryImpl: TodoItemsRepository {
-    private val list = MutableList<TodoItem>(5){ index ->
-        TodoItem(
-            id = getUniqueId(),
-            text = "Купить что-то",
-            importance = Priority(),
-            isCompleted = false,
-            createdAt = Date()
-        )
-    }
-    override fun getTasks(filtered: Boolean): List<TodoItem> {
-        val result = if(filtered.not()) list.filter { it.isCompleted.not() } else  list
-        Log.d("error",result.toString())
-        return result
+    private val api: TodoApiService = retrofit.create(TodoApiService::class.java)
+    suspend fun getTodoList(): List<TodoItem>{
+        return api.getTodoList()
     }
 
-    override fun getTask(id: String): TodoItem? {
-        return list.firstOrNull { it.id == id }
+    suspend fun addTodoItem(todoItem: TodoItem) {
+        api.addTodoItem(todoItem)
     }
 
-    override fun addTask(task: TodoItem) {
-        list.add(task)
+    suspend fun updateTodoItem(id:String,todoItem: TodoItem) {
+        api.updateTodoItem(todoItem.id, todoItem)
     }
 
-    override fun changeState(id: String, isComplete: Boolean) {
-        list.firstOrNull{it.id == id}?.isCompleted  = isComplete
+    suspend fun deleteTodoItem(id: String) {
+        api.deleteTodoItem(id)
     }
 
-    override fun deleteTask(id: String) {
-//        list.clear()
-        list.removeIf { item ->
-            item.id == id
-        }
+    fun changeState(id: String, state: Boolean) {
+
     }
 }

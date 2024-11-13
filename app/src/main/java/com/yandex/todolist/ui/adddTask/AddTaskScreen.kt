@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,32 +43,32 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight.Companion.W400
 import androidx.compose.ui.text.font.FontWeight.Companion.W500
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.yandex.todolist.R
 import com.yandex.todolist.Screen
 import com.yandex.todolist.data.Importance
 import com.yandex.todolist.data.TodoItem
 import com.yandex.todolist.data.TodoItemsRepository
-import com.yandex.todolist.data.TodoItemsRepositoryImpl
 import com.yandex.todolist.data.formatDate
 import com.yandex.todolist.data.getUniqueId
+import kotlinx.coroutines.launch
 import java.util.Date
 
 @Composable
-fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
+suspend fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
     val id: String? = navController.previousBackStackEntry
         ?.savedStateHandle
         ?.get<String>(Screen.AddTasksScreen.route)
+    val scope = rememberCoroutineScope()
     val task = remember {
-        mutableStateOf<TodoItem?>(null)
+        mutableStateOf<List<TodoItem?>>(null)
     }
     if (id != null) {
-        task.value = rep.getTask(id)
+        task.value = rep.getTodoList()
     }
+
     val descriptionState = remember { mutableStateOf(TextFieldValue(task.value?.text.orEmpty())) }
     var selectedPriority by remember { mutableStateOf(task.value?.importance ?: Importance.NORMAL) }
     var expanded by remember { mutableStateOf(false) }
@@ -118,16 +119,22 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 modifier = Modifier
                     .clickable {
                         if (descriptionState.value.text.isNotBlank()) {
-                            rep.addTask(
-                                TodoItem(
-                                    id = getUniqueId(),
-                                    text = descriptionState.value.text,
-                                    importance = selectedPriority,
-                                    isCompleted = false,
-                                    createdAt = dateTime ?: Date()
-                                )
-                            )
-                            navController.popBackStack()
+                            scope.launch {
+                                try {
+                                    rep.addTodoItem(
+                                        TodoItem(
+                                            id = getUniqueId(),
+                                            text = descriptionState.value.text,
+                                            importance = selectedPriority,
+                                            done = false,
+                                            createdAt = dateTime ?: Date()
+                                        )
+                                    )
+                                    navController.popBackStack()
+                                } catch (e: Exception) {
+                                    e.printStackTrace() // Log or handle the error
+                                }
+                            }
                         }
                     },
             )
@@ -188,7 +195,7 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = if (selectedPriority == Importance.entries[2]) colorResource(R.color.color_red) else colorResource(
                             R.color.label_tertiary
-                        )
+                        ) // Apply red color if third priority is selected
                     ),
                     fontSize = 14.sp
                 )
@@ -242,11 +249,11 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                 }
             }
             Divider(
-                color = colorResource(R.color.support_separator),
+                color = colorResource(R.color.support_separator), // Set color to transparent to achieve opacity
                 modifier = Modifier
-                    .height(0.5.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .height(0.5.dp) // Height of the divider
+                    .fillMaxWidth() // Fixed width of the divider
+                    .padding(horizontal = 16.dp) // No additional padding for the divider itself
             )
             Row(
                 modifier = Modifier
@@ -316,8 +323,16 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
                     color = colorResource(R.color.back_secondary)
                 )
                 .clickable(id !=  "") {
-                    rep.deleteTask(id.orEmpty())
-                    navController.popBackStack()
+                    if (!id.isNullOrEmpty()) {
+                        scope.launch {
+                            try {
+                                rep.deleteTodoItem(id)
+                                navController.popBackStack()
+                            } catch (e: Exception) {
+                                e.printStackTrace() // Log or handle the error
+                            }
+                        }
+                    }
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -328,11 +343,4 @@ fun AddTaskScreen(navController: NavController, rep: TodoItemsRepository) {
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun AdddTaskScreenPrev() {
-    val nav = rememberNavController()
-    AddTaskScreen(navController = nav, rep = TodoItemsRepositoryImpl())
 }

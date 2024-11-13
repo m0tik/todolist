@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,18 +32,15 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight.Companion.W500
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.yandex.todolist.R
 import com.yandex.todolist.Screen
 import com.yandex.todolist.data.TodoItemsRepository
-import com.yandex.todolist.data.TodoItemsRepositoryImpl
 import com.yandex.todolist.ui.taskItem.TaskItem
 import kotlinx.coroutines.launch
 
@@ -53,7 +51,8 @@ fun MyTasksListScreen(
     viewModel: MyTasksListViewModel = viewModel<MyTasksListViewModel>().apply {
         initViewModel(rep)
     }
-) {
+){
+    val scope = rememberCoroutineScope()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val tasks by viewModel.uiState.collectAsState()
     val listState = LazyListState()
@@ -94,7 +93,7 @@ fun MyTasksListScreen(
             Text(
                 modifier = Modifier.weight(1f),
                 color = colorResource(R.color.label_tertiary),
-                text = "Выполнено - ${tasks.list.toList().count{it.isCompleted}}"
+                text = "Выполнено - ${tasks.list.toList().count{it.done}}"
             )
             Icon(
                 painter = painterResource(if (tasks.selected) R.drawable.visibility else R.drawable.visibility_off),
@@ -103,7 +102,13 @@ fun MyTasksListScreen(
                 modifier = Modifier
                     .size(24.dp)
                     .clickable {
-                        viewModel.setVisible()
+                        scope.launch {
+                            try {
+                                viewModel.setVisible()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
                     }
             )
 
@@ -126,14 +131,14 @@ fun MyTasksListScreen(
             }) { item ->
                 TaskItem(
                     id = item.id,
-                    isChecked = item.isCompleted,
+                    isChecked = item.done,
                     taskName = item.text,
                     priority = item.importance,
                     deleteTask = { id ->
                         viewModel.deleteTask(id)
                     },
                     makeDone = { id, state ->
-                        viewModel.isComplate(id,state)
+                        viewModel.done(id,state)
                     },
                     navigateToEdit = { id ->
                         navController.currentBackStackEntry
@@ -171,11 +176,4 @@ fun MyTasksListScreen(
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun MyTasksListScreenPrev() {
-    val nav = rememberNavController()
-    MyTasksListScreen(navController = nav, rep = TodoItemsRepositoryImpl())
 }
